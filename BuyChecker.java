@@ -29,12 +29,28 @@ public class BuyChecker {
     // ③ 库存够：p.stock >= qty
     // ④ 余额够：u.balance >= p.price * qty
     // ⑤ 限购：totalBought(u.history) + qty <= 5
-
-    if (qty > 0 && p.status.equals("ON_SALE") && p.stock >= qty && u.balance >= p.price * qty && BuyChecker.totalBought(u.history) + qty <= 5) {
+        
+        if (qty<=0){
+            System.out.println("卡在数量");
+            return false;
+        }
+        if (!"ON_SALE".equals(p.status)){
+            System.out.println("卡在状态");
+            return false;
+        }
+        if (p.stock<qty){
+            System.out.println("卡在库存");
+            return  false;
+        }
+        if (u.balance<p.price * qty){
+            System.out.println("卡在余额");
+            return false;
+        }
+        if (totalBought(u.history)+qty >5){
+            System.out.println("卡在限购");
+            return false;
+        }
         return true;
-    }else{
-        return false;
-    }
 }
     
 

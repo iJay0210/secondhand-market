@@ -44,3 +44,8 @@ User.totalBought()	不能	方法体里读 history，那是“我买过什么”�
 BuyChecker.canBuy(p,u,qty)	可以，且建议 static	全靠三个参数算，体内没有“我”；BuyChecker 只是规则盒子，没有状态
 main(String[] args)	必须 static	JVM 启动时没有任何对象，只能通过类名调用，没有 this 可用
 Product.toString()	不能	要用自己的 name、price 拼字符串；而且它重写的是 Object 的实例方法，语法上也强制
+
+今天做了什么：对象和变量到底是什么关系、构造方法是干什么的、一个方法凭什么挂在类上而不是对象上。三个问题都靠做实验，不靠读定义。
+卡在哪里：删除掉static后带来的一系列报错。不理解加不加static的区别（这个方法体到底需不需要“我”）
+还没搞懂的：除了static和final俩个非访问修饰符，还有哪些，用处是什么
+ai帮了多少：解释static，给出例子帮助我更好的理解

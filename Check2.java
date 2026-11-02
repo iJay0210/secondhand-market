@@ -12,11 +12,7 @@ public class Check2 {
         u.balance = 100000;
         u.history = new int[]{1,0,2};
 
-        Product p =new Product();
-        p.name = "内存条";
-        p.price = 2999;
-        p.stock = 3;
-        p.status = "ON_SALE";
+        Product p = new Product("手机", 2999.0, 3, "ON_SALE");
 
 
         System.out.println(canBuy(p, u, 2));

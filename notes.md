@@ -37,3 +37,10 @@ ai帮助基本为0，帮忙翻译一些报错信息
 卡在哪里： 无
 还没搞懂的：第二个，IDEA 那个绿三角背后到底执行了什么命令。（执行javac?）
 ai帮了多少：0
+
+## Day 4
+练习五： 方法	该不该 static	理由
+User.totalBought()	不能	方法体里读 history，那是“我买过什么”，每个用户不同
+BuyChecker.canBuy(p,u,qty)	可以，且建议 static	全靠三个参数算，体内没有“我”；BuyChecker 只是规则盒子，没有状态
+main(String[] args)	必须 static	JVM 启动时没有任何对象，只能通过类名调用，没有 this 可用
+Product.toString()	不能	要用自己的 name、price 拼字符串；而且它重写的是 Object 的实例方法，语法上也强制

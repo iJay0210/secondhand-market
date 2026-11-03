@@ -7,15 +7,15 @@ public class BuyChecker {
             System.out.println("卡在数量");
             return false;
         }
-        if (!"ON_SALE".equals(p.status)) {
+        if (!"ON_SALE".equals(p.getStatus())) {
             System.out.println("卡在状态");
             return false;
         }
-        if (p.stock < qty) {
+        if (p.getStock() < qty) {
             System.out.println("卡在库存");
             return false;
         }
-        if (u.balance < p.price * qty) {
+        if (u.getBalance() < p.getPrice() * qty) {
             System.out.println("卡在余额");
             return false;
         }
@@ -28,11 +28,10 @@ public class BuyChecker {
 
     public static void main(String[] args) {
         Product p = new Product("手机", 2999.0, 3, "ON_SALE");
-
         User u = new User();
-        u.name = "张三";
-        u.balance = 10000.0;
-        u.history = new int[]{1, 0, 2};   // 历史共买 3 件
+        u.setName("张三");
+        u.setBalance(10000.0);
+        u.setHistory(new int[]{1, 0, 2});   // 历史共买 3 件
 
         BuyChecker checker = new BuyChecker();
 

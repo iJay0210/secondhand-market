@@ -4,6 +4,11 @@ public class Product {
    private int stock;          // 库存
    private String status;      // 状态："ON_SALE" 在售 / "OFF_SALE" 下架
 
+    @Override
+    public String toString() {
+        return name + "（" + status + "），单价 " + price + "，库存 " + stock;
+    }
+
     public String getName() { return name; }
     public double getPrice() { return price; }
     public int getStock() { return stock; }

@@ -49,3 +49,5 @@ Product.toString()	不能	要用自己的 name、price 拼字符串；而且它�
 卡在哪里：删除掉static后带来的一系列报错。不理解加不加static的区别（这个方法体到底需不需要“我”）
 还没搞懂的：除了static和final俩个非访问修饰符，还有哪些，用处是什么
 ai帮了多少：解释static，给出例子帮助我更好的理解
+
+## Day 5

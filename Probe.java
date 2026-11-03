@@ -18,6 +18,9 @@ public class Probe {
         b.name = "耳机";
         b.stock = 5;
 
+        DigitalProduct d = new DigitalProduct("笔记本电脑", 4999.0, 2, "ON_SALE", 24);
+        System.out.println(d);
+        System.out.println(d.getStock());      // 父类的方法，子类直接能用
         a.printStock(a);
        b.printStock(b);
     }

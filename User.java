@@ -1,9 +1,12 @@
+import java.util.ArrayList;
+import java.util.List;
+
 public class User {
 
 
    private String name;
    private double balance;
-   private int[] history;
+   private final List<Integer> history = new ArrayList<>();
 
     public String getName() {
         return name;
@@ -24,18 +27,20 @@ public class User {
         this.balance = balance;
     }
 
-    public int[] getHistory() {
-        return history;
+    public void addPurchase(int qty) {
+        if (qty <= 0) throw new IllegalArgumentException("购买数量必须为正：" + qty);
+        history.add(qty);
     }
 
-    public void setHistory(int[] history) {
-        this.history = history;
+    public List<Integer> getHistory() {
+        return List.copyOf(history);
     }
+
 
     public int totalBought(){
         int sum = 0;
-        for (int i = 0; i < history.length; i++) {
-            sum+=history[i];
+        for (Integer qty : history) {
+            sum += qty;
         }
         return sum;
     }

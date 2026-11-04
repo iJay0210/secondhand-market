@@ -31,7 +31,8 @@ public class BuyChecker {
         User u = new User();
         u.setName("张三");
         u.setBalance(10000.0);
-        u.setHistory(new int[]{1, 0, 2});   // 历史共买 3 件
+        u.addPurchase(1);
+        u.addPurchase(2);// 历史共买 3 件
 
         BuyChecker checker = new BuyChecker();
 

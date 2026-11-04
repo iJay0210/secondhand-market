@@ -10,7 +10,8 @@ public class Check2 {
         User u = new User();
         u.setName("李四");
         u.setBalance(100000);
-        u.setHistory(new int[]{1,0,2});
+        u.addPurchase(1);
+        u.addPurchase(2);
 
         Product p = new Product("手机", 2999.0, 3, "ON_SALE");
 

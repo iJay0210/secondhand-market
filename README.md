@@ -9,7 +9,8 @@
 - [x] Day 3: 环境迁回本地，代码重构
 - [x] Day 4: 类与对象，static 与引用
 - [x] Day 5: 封装与继承
-- [ ] Week 2 后半：集合与内存版 CRUD
+- [x] Day 6: 集合，ArrayList 与 HashMap
+- [ ] Day 7: 内存版 CRUD
 
 ## 本地运行
 ```bash

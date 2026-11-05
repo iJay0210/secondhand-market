@@ -10,13 +10,16 @@
 - [x] Day 4: 类与对象，static 与引用
 - [x] Day 5: 封装与继承
 - [x] Day 6: 集合，ArrayList 与 HashMap
-- [ ] Day 7: 内存版 CRUD
+- [x] Day 7: 内存版 CRUD，Repository 与 Service
+- [ ] Day 8: 复盘与 W2 收口
 
 ## 本地运行
 ```bash
-javac Hello.java
-java Hello
+javac -encoding UTF-8 *.java
+java App
 ```
+
+`App` 是入口，跑一遍完整的 CRUD 流程：上架、购买、改价、删除、异常拦截。
 
 
 

@@ -70,3 +70,16 @@ ai帮了多少：封装那两题基本是 ai 讲完我才懂的。getHistory 这
 
 ai帮了多少：装箱拆箱和 Integer 的 == 这两条基本靠 ai 讲。CatalogTest 和 SoldTest 两个测试类是 ai 写的，我只跑了一遍。业务代码的改动是自己做的。
 
+## Day 7
+
+今天做了什么：给 Product 加了自增 id，static nextId 配 final id，构造方法里 this.id = nextId++。新建 ProductRepository，用 Map<Integer, Product> 存，五个方法 save、findById、findAll、deleteById、count，findById 找不到就抛 IllegalArgumentException，findAll 返回 new ArrayList<>(store.values()) 而不是原件。新建 ProductService 放业务规则，create 默认 OFF_SALE，delete 要求库存为 0，buy 把 BuyChecker 判断、setStock 扣库存、addPurchase 记账、setBalance 扣钱串在一起。最后写 App 跑通八步完整流程，上架、上架前买失败、上架后买成功、改价、删除、删不掉、查不到、列全部，八步输出全对。再把 CatalogTest 改用 ProductRepository，删掉 Catalog.java。
+
+卡在哪里：真正卡住的是练习五，把 CatalogTest 换成 Repository 的时候「查询怎么改」想不出来。Catalog.find 是按名字查，ProductRepository.findById 是按编号查，这不是换一个方法名，是换了查询的入口。我一开始写成 repo.findById("手机".equals())，报了两个错，一个是 equals 没给参数，一个是 String 转不了 int。后来才明白要先把 save 的返回值接住，用 p1.getId() 拿到编号，再按编号查。第二个卡点是 ProductService 里 changePrice，参数名写的是 price，方法体里写的是 newPrice，报「找不到符号 变量 newPrice」，抄的时候脑子里想着新价格，手上就写成了 newPrice。
+
+还没搞懂的：检验第四题我一开始只会判断「需不需要 static」，说不出去掉之后会怎样，等于只知道该不该，不知道后果。ai 跑了个对比实验才看明白：去掉 static 之后每个商品都有自己的一份 nextId，初始化都是 1，各自加一之后那个 2 跟着对象一起没了，下一个 new 出来又是全新的 1，所以三个商品 id 全是 1。Repository 里三次 put 全落在 key 1 上，前两个被覆盖，仓库里只剩最后一个。而且编译不报错、运行也不报错，是静默的错。这件事让我意识到字段的判据和方法的判据不一样，方法是看「要不要我」，字段是看「是不是大家共用一个」。
+
+ai帮了多少：ProductRepository、ProductService、App 三段的骨架是 ai 给的，我照着写。changePrice 的变量名错和 CatalogTest 的查询是我自己卡住的，ai 讲了原因，CatalogTest 整个是 ai 重写的。检验五题的批改、以及 static 那个对比实验是 ai 做的。
+
+还剩的小事：Product.toString 里写的是 id + name，打印出来是「1手机」，编号和名字粘在一起，应该加个 "#" 和空格。
+
+

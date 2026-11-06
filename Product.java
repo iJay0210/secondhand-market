@@ -1,4 +1,7 @@
 public class Product {
+    private static int nextId = 1;
+    private final int id;
+
   private String name;        // 商品名
   private double price;       // 单价
    private int stock;          // 库存
@@ -6,7 +9,7 @@ public class Product {
 
     @Override
     public String toString() {
-        return name + "（" + status + "），单价 " + price + "，库存 " + stock;
+        return id + name + "（" + status + "），单价 " + price + "，库存 " + stock;
     }
 
     public String getName() { return name; }
@@ -40,11 +43,13 @@ public class Product {
     }
 
     public Product(String name, double price, int stock, String status) {
+        this.id = nextId++;
         setName(name);
         setPrice(price);
         setStock(stock);
         setStatus(status);
     }
+    public int getId() { return id; }
 }
 
 

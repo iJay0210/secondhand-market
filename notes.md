@@ -82,4 +82,14 @@ ai帮了多少：ProductRepository、ProductService、App 三段的骨架是 ai 
 
 还剩的小事：Product.toString 里写的是 id + name，打印出来是「1手机」，编号和名字粘在一起，应该加个 "#" 和空格。
 
+## W2 周复盘
+
+这周能脱稿说清的：字段是 private 还不够，返回值把内部引用交出去，等于把修改权也交出去了——getHistory 返回 List.copyOf 就是为了堵这个。构造方法自己不受 private 限制，它可以直接 this.stock = stock 编译通过，所以它不调 setter 就等于绕过了校验。Integer 的 == 比的是地址，127 和 1000 结果不同是因为 valueOf 在 -128 到 127 之间复用池子里的对象，超出范围就每次新建。findById 找不到要抛异常，因为调用方确信这个东西存在，搜不到才该返回 null。Repository 和 Service 分开，换数据库只改一个文件，Service 一个字不动。去掉 nextId 的 static，每个商品都有自己的计数器，全从 1 开始数，三次 put 落在同一个 key 上，前两个被覆盖，而且编译运行都不报错。
+
+还是背的：static 的判据。我知道「方法体里要不要用我」这句话，但昨天自测第一题还是只能说个大概，尤其是「参数里传进来的对象不算我」这一层，讲的时候会卡一下，得脑子里过一遍那个 static void printStock(Item self) 的例子才顺得下去。引用复制也是，知道「复制的是地址」，但让我当场把「复制地址」和「改字段」拆成两步讲，还是会说得黏在一起。这两个正好是 Day 4 就答错过的两处，隔了三天还是大概，说明当时是被讲通的，不是自己想通的。W3 讲多线程超卖的时候这两个会再撞上一次，到时候不能再糊过去。
+
+这周改代码最痛的一次：练习五，把 CatalogTest 从 Catalog 换成 ProductRepository，卡在「查询怎么改」完全想不出来。Catalog.find 是按名字查，ProductRepository.findById 是按编号查，我一开始以为就是换个方法名，写成了 repo.findById("手机".equals())，报了两个错才知道这不是改名，是换了查询的入口。要先把 save 的返回值接住拿到 id，再按 id 去查。痛的地方在于改一个名字是十分钟的事，改一个语义要让所有调用点重新想一遍「我到底要什么」，而这周我一共撞了三次：改 private 那次、删 Catalog 这次、还有 getHistory 换返回类型。
+
+下周想提前知道的一件事：数据库到底怎么把对象存进去的。现在是 Map 装对象，明天换成 MySQL，那 Product 这个对象是怎么变成表里一行的？反过来查出来的行又是怎么变回对象的？
+
 

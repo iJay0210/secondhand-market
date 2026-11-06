@@ -11,7 +11,8 @@
 - [x] Day 5: 封装与继承
 - [x] Day 6: 集合，ArrayList 与 HashMap
 - [x] Day 7: 内存版 CRUD，Repository 与 Service
-- [ ] Day 8: 复盘与 W2 收口
+- [x] Day 8: 复盘与 W2 收口
+- [ ] Week 3: MySQL 与 JDBC
 
 ## 本地运行
 ```bash

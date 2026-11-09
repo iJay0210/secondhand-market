@@ -92,4 +92,19 @@ ai帮了多少：ProductRepository、ProductService、App 三段的骨架是 ai 
 
 下周想提前知道的一件事：数据库到底怎么把对象存进去的。现在是 Map 装对象，明天换成 MySQL，那 Product 这个对象是怎么变成表里一行的？反过来查出来的行又是怎么变回对象的？
 
+## Day 9
+
+今天做了什么：先把 MySQL80 服务启动起来，顺便把启动类型从「手动」改回「自动」，不然每天开机都要手动来一遍。然后把 mysql-connector-j-8.0.33.jar 复制进项目的 lib 目录，在 IDEA 里 Add as Library 接上，.gitignore 加了 lib/*.jar 把 jar 排除出版本控制。建了 secondhand_market 库和 product 表，五个字段 id、name、price、stock、status，id 用 AUTO_INCREMENT，price 用 DECIMAL(10,2)。写了 DbTest，跑通连接、插入一条、再查出来。最后把连接那部分抽成 DbUtil。
+
+卡在哪里：把插入的代码写在了第一个 try 的 } 外面，报「找不到符号 变量 conn」。原因是 conn 是在 try 的括号里声明的，出了那对花括号就失效了，而我把 String sql 和第二个 try 都写在了 8 格缩进的位置，跟 try 平级。缩进其实早就提示了这件事，我当时没看出来。教训是写完按一次 Ctrl+Alt+L 自动格式化，如果排出来的缩进和我以为的不一样，那就是我写错了地方。
+
+还有一件事值得记：代码里是硬编码的「手机 2999.00」，所以我连跑两次，表里就多了两条一模一样的记录，id 分别是 1 和 2。这说明「跑通一次」和「能重复跑」是两件事，真实项目里要么每次先清表，要么用不重复的测试数据，不然数据会被自己污染。
+
+还没搞懂的：ResultSet 到底占不占内存，如果一次查十万行会不会把内存撑爆，是不是应该分批取。还有连接这东西到底能开多少个，一个程序同时开着十个连接会怎样，什么情况下该用连接池。这两个问题今天只是听说，没真的撞过。
+
+ai帮了多少：DbTest 和 DbUtil 的代码骨架是任务单给的，我照着写。作用域的报错是 ai 讲了原因我才明白。检验五题的答案基本靠 ai 讲，其中 double 和 BigDecimal 的差别、SQL 注入那两段是 ai 跑实验给我看的，我自己没动手验证。
+
+还剩的小事：本来 DbTest 里明文写着数据库密码，而仓库是公开的，所以改成从 db.properties 读。DbUtil 加了 loadConfig，把 url、user、password 从文件里读出来，DbTest 改成直接调 DbUtil.getConnection()，不用自己再写一份连接信息。读文件那一步用的是 try-with-resources，跟今天学的关连接是同一个道理——文件流也是外部资源，用完必须关。db.properties 加进了 .gitignore 不会被提交，另外提交一个 db.properties.example 放占位符，别人 clone 下来照着填一份就能跑。
+
+
 

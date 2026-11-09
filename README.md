@@ -12,7 +12,49 @@
 - [x] Day 6: 集合，ArrayList 与 HashMap
 - [x] Day 7: 内存版 CRUD，Repository 与 Service
 - [x] Day 8: 复盘与 W2 收口
-- [ ] Week 3: MySQL 与 JDBC
+- [x] Day 9: JDBC 连接 MySQL
+- [ ] Day 10: ProductRepository 换成 MySQL
+
+## 环境准备
+
+需要 MySQL 8.0。先建库建表：
+
+```sql
+CREATE DATABASE IF NOT EXISTS secondhand_market
+    DEFAULT CHARACTER SET utf8mb4
+    COLLATE utf8mb4_unicode_ci;
+
+USE secondhand_market;
+
+CREATE TABLE product (
+    id      INT           NOT NULL AUTO_INCREMENT,
+    name    VARCHAR(100)  NOT NULL,
+    price   DECIMAL(10,2) NOT NULL,
+    stock   INT           NOT NULL DEFAULT 0,
+    status  VARCHAR(20)   NOT NULL DEFAULT 'OFF_SALE',
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+## 依赖
+
+MySQL 驱动不打进仓库。把 `mysql-connector-j-8.0.33.jar` 放进 `lib/` 目录，然后在 IDEA 里右键这个 jar，选 `Add as Library...`。
+
+驱动版本要跟 MySQL 的大版本对上：MySQL 8.0 配 `mysql-connector-j-8.x`，别用 9.x。
+
+## 配置
+
+数据库账号密码不写在代码里。把 `db.properties.example` 复制一份改名为 `db.properties`，填上自己的密码：
+
+```
+db.url=jdbc:mysql://localhost:3306/secondhand_market?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf8&allowPublicKeyRetrieval=true
+db.user=root
+db.password=你的密码
+```
+
+`db.properties` 已在 `.gitignore` 里，不会被提交。
+
+连接串里四个参数缺一不可，少一个就报错：`useSSL=false` 关 SSL，`serverTimezone=Asia/Shanghai` 定时区，`characterEncoding=utf8` 防中文乱码，`allowPublicKeyRetrieval=true` 是 MySQL 8 特有的坑。
 
 ## 本地运行
 ```bash
@@ -21,6 +63,8 @@ java App
 ```
 
 `App` 是入口，跑一遍完整的 CRUD 流程：上架、购买、改价、删除、异常拦截。
+
+`DbTest` 是 JDBC 的连接与读写验证，单独跑它可以看到连接、插入、查询三步的输出。
 
 
 

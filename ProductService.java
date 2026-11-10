@@ -9,11 +9,15 @@ public class ProductService {
     }
 
     public void putOnSale(int id){
-        repo.findById(id).setStatus("ON_SALE");
+        Product p = repo.findById(id);
+        p.setStatus("ON_SALE");
+        repo.save(p);
     }
 
     public void changePrice(int id,double newPrice){
-        repo.findById(id).setPrice(newPrice);
+        Product p = repo.findById(id);
+        p.setPrice(newPrice);
+        repo.save(p);
     }
 
     public void delete(int id){
@@ -40,6 +44,7 @@ public class ProductService {
             return false;
         }
         p.setStock(p.getStock() - qty);
+        repo.save(p);
         u.addPurchase(qty);
         u.setBalance(u.getBalance() - p.getPrice()*qty);
         return true;

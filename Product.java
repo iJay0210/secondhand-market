@@ -1,5 +1,4 @@
 public class Product {
-    private static int nextId = 1;
     private final int id;
 
   private String name;        // 商品名
@@ -43,13 +42,24 @@ public class Product {
     }
 
     public Product(String name, double price, int stock, String status) {
-        this.id = nextId++;
+        this.id = 0;
         setName(name);
         setPrice(price);
         setStock(stock);
         setStatus(status);
     }
     public int getId() { return id; }
+    public Product(int id, String name, double price, int stock, String status) {
+        this.id = id;
+        setName(name);
+        setPrice(price);
+        setStock(stock);
+        setStatus(status);
+    }
+
+    public boolean isNew() {
+        return id == 0;
+    }
 }
 
 

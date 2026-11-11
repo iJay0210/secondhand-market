@@ -13,7 +13,9 @@
 - [x] Day 7: 内存版 CRUD，Repository 与 Service
 - [x] Day 8: 复盘与 W2 收口
 - [x] Day 9: JDBC 连接 MySQL
-- [ ] Day 10: ProductRepository 换成 MySQL
+- [x] Day 10: ProductRepository 换成 MySQL
+- [x] Day 11: 多表、外键与事务
+- [ ] Day 12: 把 Connection 传进 Repository
 
 ## 环境准备
 
@@ -34,7 +36,28 @@ CREATE TABLE product (
     status  VARCHAR(20)   NOT NULL DEFAULT 'OFF_SALE',
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `order` (
+    id         INT           NOT NULL AUTO_INCREMENT,
+    user_name  VARCHAR(50)   NOT NULL,
+    total      DECIMAL(10,2) NOT NULL,
+    created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE order_item (
+    id         INT           NOT NULL AUTO_INCREMENT,
+    order_id   INT           NOT NULL,
+    product_id INT           NOT NULL,
+    qty        INT           NOT NULL,
+    unit_price DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_item_order   FOREIGN KEY (order_id)   REFERENCES `order` (id),
+    CONSTRAINT fk_item_product FOREIGN KEY (product_id) REFERENCES product (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
+
+建表顺序不能反，`order_item` 要引用前两张表。`order` 是 MySQL 的保留字，必须用反引号。`ENGINE=InnoDB` 不能省——另一常见的 MyISAM 不支持事务和外键，换过去会让 `commit` 和 `rollback` 静默失效。
 
 ## 依赖
 

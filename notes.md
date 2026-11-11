@@ -106,5 +106,36 @@ ai帮了多少：DbTest 和 DbUtil 的代码骨架是任务单给的，我照着
 
 还剩的小事：本来 DbTest 里明文写着数据库密码，而仓库是公开的，所以改成从 db.properties 读。DbUtil 加了 loadConfig，把 url、user、password 从文件里读出来，DbTest 改成直接调 DbUtil.getConnection()，不用自己再写一份连接信息。读文件那一步用的是 try-with-resources，跟今天学的关连接是同一个道理——文件流也是外部资源，用完必须关。db.properties 加进了 .gitignore 不会被提交，另外提交一个 db.properties.example 放占位符，别人 clone 下来照着填一份就能跑。
 
+## Day 10
+
+今天做了什么：把 Product 的 static nextId 删掉，id 改成由数据库给。做法是两个构造方法，不带 id 的那个把 id 设成 0 表示还没入库，带 id 的那个专给从数据库读回来用，再配一个 isNew() 判断。ProductRepository 整个重写，Map 换成 JDBC：save 里按 isNew 分成 insert 和 update 两条路，insert 用 RETURN_GENERATED_KEYS 拿回自增 id 再 return new Product(id, ...)，因为 id 是 final 改不了；update 和 deleteById 用 executeUpdate() == 0 判断这一行到底存不存在；findAll 加了 ORDER BY id 保证顺序稳定，不然比对输出时会以为出错；ResultSet 转 Product 抽成 toProduct 复用。最后跑 App 八步，输出和上周内存版一字不差。
+
+卡在哪里：最意外的是 ProductService 得改。我原来写的是 repo.findById(id).setStatus("ON_SALE") 这种，内存版里没问题，因为 findById 返回的就是仓库里那个对象；换成数据库版之后，findById 每次都 SELECT 再 new 一个全新对象，我改的只是这个临时对象，方法一结束它就没了，数据库一点没变。三个方法各补一行 repo.save(p)，一共改了九行。而且这个错误不报任何异常，程序跑得好好的，只有去查表才发现库存和价格都没动。
+
+还没搞懂的：Product.price 是 double，数据库里是 DECIMAL(10,2)，Java 里对应 BigDecimal。所以每轮读写都在 double 和 BigDecimal 之间转两次，精度在第一次转换时就丢了。要彻底解决得把 price 改成 BigDecimal，但那样 ProductService、BuyChecker、App 全要跟着改，先记着。
+
+ai帮了多少：Repository 的代码骨架是任务单给的，我照着写。ProductService 要补 save 这件事是 ai 先看出来的，我自己没想到；final 的 id 怎么保住也是 ai 讲的。
+
+## Day 11
+
+今天做了什么：建了 order 和 order_item 两张表。order 是保留字所以要用反引号包起来，两张都是 ENGINE=InnoDB，不然事务和外键都不生效。order_item 上加了两个外键分别指向 order 和 product，还给了约束名方便看报错。写 OrderService.placeOrder，用一个 Connection 走完查商品、写订单、写明细、扣库存四步，中间 setAutoCommit(false)、commit、rollback 保证四步要么全成要么全不成。扣库存用的是 UPDATE product SET stock = stock - ? WHERE id = ? AND stock >= ?，靠返回的影响行数判断够不够。跑 OrderTest 三个用例，然后做了关掉事务看脏数据的实验。
+
+卡在哪里：三个地方。第一个是 INSERT INTO 'order' 用了单引号，报 SQL 语法错，单引号在 SQL 里是字符串字面量，包表名要用反引号。第二个是做关掉事务的实验时，我只注释了 setAutoCommit(false)，commit() 和 rollback() 还留着，报 Can't call rollback when autocommit=true。原来这三行是绑在一起的，autoCommit 为 true 的时候 commit 和 rollback 都算非法调用。而且 catch 里 rollback 抛出的新异常会把原来那个覆盖掉，导致我看到的 Caused by 是 rollback 的错误，真正的原因反而看不见。三处全注释掉才跑出干净的脏数据。第三个是查完数据库以为库存扣错了，查询显示 stock 是 3，表格里显示 2，我以为对不上。后来才明白那个 2 是 order_item 表的 qty（买了几个），不是 product 表的 stock（剩几个），5 减 2 等于 3，本来就对。
+
+还没搞懂的：两个线程同时买最后一件商品，靠 UPDATE ... WHERE stock >= ? 这种条件更新到底挡不挡得住，还是得靠锁或者事务隔离级别，这个要等讲多线程。还有 rollback 之后自增号不回收，实验里看到 order_item 的 id 从 2 开始、order 的 id 也跳过号，但不太清楚这对业务有什么实际影响。
+
+ai帮了多少：OrderService 的骨架是任务单给的。单引号反引号、rollback 那个报错、还有 qty 和 stock 看混，三个卡点都是 ai 定位的。脏数据的实验是 ai 代跑的，原理我懂，但没有一步步自己操作完。
+
+## Day 11 检验答案
+
+第一题，为什么 unit_price 要存进明细表。因为价格会变。张三今天花 2999 买的手机，我明天降价到 1999，如果订单金额是每次去 product 表 JOIN 出来的，他的历史订单会跟着变成 1999，他会发现账单被改了。所以 unit_price 存的是下单那一刻的价格，是一个快照。同样该拍快照的还有收货地址、用的哪张优惠券，甚至商品名称——商品改名之后历史订单应该显示当时那个名字。一句话：凡是要留作历史证据的，都得在发生当时抄一份，不能依赖将来去别处查。
+
+第二题，外键约束挡了什么。它保证 order_item 里的每一条明细都挂在一张真实存在的订单上、指向一个真实存在的商品。我试过往 order_item 插一条 order_id = 999 的记录，被数据库直接拒绝了，报外键约束失败。如果没有外键，这个检查就得靠 Java 代码记得写，漏一个判断数据库里就会堆一批孤儿明细——查订单查不到，但它们实实在在占着空间。外键的价值是把这条保证交给数据库执行，不依赖我的代码有没有写对。
+
+第三题，ACID 里今天用到的是哪一个。原子性。它的意思是这一组操作是一个不可分割的整体，要么全成功，要么全不成功，不存在中间状态。下单就是典型：查商品、写订单、写明细、扣库存，这四步必须一起成功。如果库存不够，前面已经写进去的订单和明细必须撤销，否则就会留下「有订单但没扣库存」的脏数据，那件商品还能被别人买走。另外三个里，隔离性会在讲多线程时撞上，持久性由 InnoDB 的日志保证，一致性是原子性、隔离性、持久性共同的结果。
+
+第四题，为什么所有 SQL 必须用同一个 Connection。因为事务是绑在连接上的，不是绑在代码块上的。setAutoCommit(false) 只对这一条连接生效，commit 和 rollback 也只影响这一条。如果其中某一句跑到了另一条连接上，那条连接是 autoCommit=true，它那一句执行完立刻生效、脱离事务控制，最后 rollback 的时候它不会跟着撤销。这也正是今天 OrderService 不复用 ProductRepository 的原因——Repository 每个方法第一行都是 DbUtil.getConnection()，自己开自己的连接，调它的话那次更新会跑在另一条连接上，事务管不到。
+
+第五题，不开事务会留下什么脏数据。实测的结果是：order 表里多了一行李四的订单，total 是 2996001.00（999 件乘 2999），order_item 表里多了一条 qty = 999 的明细，但库存一点没减。也就是说系统认为李四买到了，可那件商品还在架上，还能被别人买走。而控制台输出一切正常，只打印了两行「失败了（预期）」，程序没崩、没报警，问题全在数据库里躺着。这就是为什么做完一定要去查表，光看控制台是看不出来的。
 
 

@@ -15,7 +15,8 @@
 - [x] Day 9: JDBC 连接 MySQL
 - [x] Day 10: ProductRepository 换成 MySQL
 - [x] Day 11: 多表、外键与事务
-- [ ] Day 12: 把 Connection 传进 Repository
+- [x] Day 12: 把 Connection 传进 Repository
+- [ ] Day 13: W3 复盘与收口
 
 ## 环境准备
 

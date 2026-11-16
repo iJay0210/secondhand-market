@@ -160,5 +160,17 @@ ai帮了多少：重构的代码是任务单给的，两处搬移是我自己改
 
 本周最大的缺口：User 还在内存里。它比另外四个缺口（能下单但查不到订单、库存没有数据库层约束、全靠 main 手工测、异常处理不统一）都严重，因为订单、评价、收藏所有这些功能最后都要挂在用户身上。更直接的问题是，订单表里存的是 user_name 这个字符串而不是用户 id——这意味着「张三」只是一个名字，不是一条唯一记录：改个名字，历史订单就找不到人；两个人同名，订单就串了。我在 Day 7 学过「身份和数据要分开」，但在用户这块完全没落实。
 
+## Day 14
+
+今天做了什么：给 User 加了 id，建了 user 表，然后把 order 表从存 user_name 字符串改成了存 user_id 外键。改法是三步走：先加一列允许 NULL，再从订单表里提取去重的用户名建成用户、用 UPDATE JOIN 回填，然后体检确认没有 NULL，最后才收紧成 NOT NULL、加外键、删掉旧列。User 那边照 Product 的套路加了双构造和 isNew()，新建 UserRepository 只写了 save 和 findById 两个方法（都做了双版本）。OrderService 的 placeOrder 参数从 String username 改成 int userId，并且在最后补上了扣余额——一次下单从三处写变成四处写。跑 OrderTest 四个用例，王五余额从 10000 变成 4002，李四余额还是 100。
+
+卡在哪里：三处。第一处是 UserRepository 里把 `ResultSet keys` 改名成 `rs`，但 `new User(keys.getInt(1))` 那一处忘了跟着改，报「找不到符号 变量 keys」。这已经是我第三次栽在「声明一个名字、用了另一个名字」上了，上一次是 Day 7 的 newPrice。第二处是 User 的第一个构造方法写成了 (double balance, String name)，跟第二个构造 (int id, String name, double balance) 顺序不一致，导致 new User("张三", 10000.0) 报「String 无法转换为 double」。第三处是构造方法里直接 this.balance = balance 赋值，绕过了 setBalance 的校验——我的 Product 明明是走 setter 的，User 忘了，同一个知识点只对一半。
+
+还有一件让我意外的事：我一直以为 `fk_order_user` 是一张表，问出来才知道它是外键约束的名字，挂在 order 表上，`ADD CONSTRAINT fk_order_user` 只是给这条规则取个标签。去 information_schema 里查才看明白，SHOW TABLES 只有四张表，外键约束根本不在表列表里。
+
+还没搞懂的：一是 history 这个字段退休之后 totalBought() 怎么办，它现在遍历内存里的 List，改成从订单表算的话每次调用都要查库，值不值得。二是今天跑了两次 OrderTest，user 表里就多出两条重复的王五和李四——测试脚本没有任何清理机制，跟 Day 9 那个硬编码插入导致重复是同一个毛病。听说周三会学自动测试，应该有办法解决，但还不知道具体怎么做。
+
+ai帮了多少：UserRepository、新的 OrderService、OrderTest 的骨架都是任务单给的。今天我反过来纠正了 ai 两处：一处是 ADD COLUMN user_id INT NOT NULL 其实不会报错，会静默填 0（ai 任务单里写的是会失败，实测推翻了）；另一处是 ai 写「李四余额是 rollback 救回来的」也不准，实际是 setBalance 检查在前、赋值没执行、user 表压根没被写过，rollback 撤的是订单、明细、库存那三处。
+
 
 

@@ -17,7 +17,8 @@
 - [x] Day 11: 多表、外键与事务
 - [x] Day 12: 把 Connection 传进 Repository
 - [x] Day 13: W3 复盘与收口
-- [ ] Week 4: 用户与订单闭环
+- [x] Day 14: User 入库与表结构迁移
+- [ ] Day 15: 查我的订单
 
 ## 环境准备
 
@@ -39,12 +40,21 @@ CREATE TABLE product (
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE `order` (
+CREATE TABLE `user` (
     id         INT           NOT NULL AUTO_INCREMENT,
-    user_name  VARCHAR(50)   NOT NULL,
-    total      DECIMAL(10,2) NOT NULL,
+    name       VARCHAR(50)   NOT NULL,
+    balance    DECIMAL(10,2) NOT NULL DEFAULT 0,
     created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE `order` (
+    id         INT           NOT NULL AUTO_INCREMENT,
+    user_id    INT           NOT NULL,
+    total      DECIMAL(10,2) NOT NULL,
+    created_at DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_order_user FOREIGN KEY (user_id) REFERENCES `user` (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE order_item (
@@ -59,7 +69,9 @@ CREATE TABLE order_item (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
 
-建表顺序不能反，`order_item` 要引用前两张表。`order` 是 MySQL 的保留字，必须用反引号。`ENGINE=InnoDB` 不能省——另一常见的 MyISAM 不支持事务和外键，换过去会让 `commit` 和 `rollback` 静默失效。
+`product` 和 `user` 互不依赖，谁先谁后都行；`order` 要引用 `user`，`order_item` 要引用 `order` 和 `product`，所以这两张必须放后面。`order` 和 `user` 都是 MySQL 的关键字，必须用反引号。`ENGINE=InnoDB` 不能省——另一常见的 MyISAM 不支持事务和外键，换过去会让 `commit` 和 `rollback` 静默失效。
+
+外键约束都起了名字（`fk_` 前缀 + 「子表_父表」），报错时能一眼看出是哪条关系被违反。
 
 ## 依赖
 

@@ -12,9 +12,7 @@ public class App {
 
         System.out.println();
         System.out.println("=== 2. 上架状态默认是 OFF_SALE，卖不了 ===");
-        User u = new User();
-        u.setName("张三");
-        u.setBalance(10000.0);
+        User u = new User("张三", 10000.0);
         System.out.println("上架前买手机：" + service.buy(p1.getId(), u, 1));
 
         System.out.println();

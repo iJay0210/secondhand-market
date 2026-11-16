@@ -3,10 +3,29 @@ import java.util.List;
 
 public class User {
 
-
+    private final int id;
    private String name;
    private double balance;
    private final List<Integer> history = new ArrayList<>();
+
+
+
+
+    public User(String name,double balance) {
+        this.id = 0;
+        setName(name);
+        setBalance(balance);
+    }
+
+    public User(int id, String name, double balance) {
+        this.id = id;
+        this.name = name;
+        this.balance = balance;
+    }
+
+    public int getId() {return id;}
+
+    public boolean isNew(){return id == 0;}
 
     public String getName() {
         return name;
@@ -43,6 +62,11 @@ public class User {
             sum += qty;
         }
         return sum;
+    }
+
+    @Override
+    public String toString(){
+        return "#" + id + " " + name + ",余额" + balance;
     }
 
 }

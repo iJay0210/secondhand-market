@@ -28,9 +28,7 @@ public class BuyChecker {
 
     public static void main(String[] args) {
         Product p = new Product("手机", 2999.0, 3, "ON_SALE");
-        User u = new User();
-        u.setName("张三");
-        u.setBalance(10000.0);
+        User u = new User("张三", 10000.0);
         u.addPurchase(1);
         u.addPurchase(2);// 历史共买 3 件
 

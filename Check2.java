@@ -7,9 +7,7 @@ public class Check2 {
         return p.getStock() >= qty && u.getBalance() >= p.getPrice()*qty;
     }
     public static void main(String[] args) {
-        User u = new User();
-        u.setName("李四");
-        u.setBalance(100000);
+        User u = new User("李四", 100000);
         u.addPurchase(1);
         u.addPurchase(2);
 

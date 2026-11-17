@@ -18,7 +18,8 @@
 - [x] Day 12: 把 Connection 传进 Repository
 - [x] Day 13: W3 复盘与收口
 - [x] Day 14: User 入库与表结构迁移
-- [ ] Day 15: 查我的订单
+- [x] Day 15: 查我的订单（多表 JOIN 与对象折叠）
+- [ ] Day 16: 第一次自动测试
 
 ## 环境准备
 
@@ -99,9 +100,41 @@ javac -encoding UTF-8 *.java
 java App
 ```
 
-`App` 是入口，跑一遍完整的 CRUD 流程：上架、购买、改价、删除、异常拦截。
+`App` 是商品流程的入口：上架、购买、改价、删除、异常拦截。
+
+`OrderTest` 是订单流程的入口：下单、库存不足、余额不足、查我的订单。
 
 `DbTest` 是 JDBC 的连接与读写验证，单独跑它可以看到连接、插入、查询三步的输出。
+
+## 代码结构
+
+数据层（只碰数据库，不含业务规则）：
+
+```
+DbUtil              读 db.properties，给出 Connection
+ProductRepository   product 表。五个方法各两个版本：自己开连接的，和接收外部 Connection 的
+UserRepository      user 表。目前只有 save 和 findById
+OrderRepository     order + order_item 表。插入订单、插入明细、按用户查订单（多表 JOIN）
+```
+
+业务层（管流程和规则，一句 SQL 都不写）：
+
+```
+ProductService      商品的上架、改价、购买
+OrderService        下单（四步写入同一事务），查我的订单
+BuyChecker          能不能买的三条判断
+```
+
+模型（数据长什么样）：
+
+```
+Product             商品。id 由数据库生成，用双构造 + isNew() 区分「已入库」和「未入库」
+User                用户。同样的双构造套路
+Order               订单头。内含 List<OrderItem>
+OrderItem           订单明细。productName 是 JOIN 出来的，不来自表字段
+```
+
+查询订单时的关键一步：一次 JOIN 返回的是扁平行，同一个订单号会重复多次，所以在 `OrderRepository.findByUserId` 里用 `LinkedHashMap` 按订单号折叠成一个订单对象。用 `LinkedHashMap` 而不是 `HashMap`，是为了保住 SQL 里 `ORDER BY` 排好的顺序。
 
 
 

@@ -172,5 +172,15 @@ ai帮了多少：重构的代码是任务单给的，两处搬移是我自己改
 
 ai帮了多少：UserRepository、新的 OrderService、OrderTest 的骨架都是任务单给的。今天我反过来纠正了 ai 两处：一处是 ADD COLUMN user_id INT NOT NULL 其实不会报错，会静默填 0（ai 任务单里写的是会失败，实测推翻了）；另一处是 ai 写「李四余额是 rollback 救回来的」也不准，实际是 setBalance 检查在前、赋值没执行、user 表压根没被写过，rollback 撤的是订单、明细、库存那三处。
 
+## Day 15
+
+今天做了什么：做了「查我的订单」。新建 Order 和 OrderItem 两个类，Order 里装一个 List<OrderItem>，OrderItem 存商品名、件数、下单时的单价。新建 OrderRepository，把 insertOrder 和 insertItem 从 OrderService 搬了进来，再加一个 findByUserId——一句 SQL 连了四张表（order、order_item、product、user），用 WHERE 过滤出某个人的订单。关键是那句 SQL 返回的是扁平行，同一个订单号会重复出现，所以在 Java 里用 Map<Integer, Order> 按订单号分组折叠：第一次见到某个订单号就建对象放进 Map，后面再遇到就只往里加明细。跑出来王五的订单显示成「1 张订单 + 3 条明细」，不是「3 张一模一样的订单」。
+
+卡在哪里：三处。第一是 OrderRepository 我对照着敲能通，但合上代码自己写写不出来——那段三十来行里塞了多表 JOIN、三层 try-with-resources 嵌套、Map 分组、new ArrayList<>(byId.values()) 五样新东西，一次就默写出来不现实。第二是 JOIN 我一开始完全没搞懂，不知道它是干什么的，后来 ai 用我自己的三张表演了一遍才明白：不加 JOIN 只能看到一张表的列，JOIN 是按 ON 的条件把两边的行配成对、横向拼成一张宽表，ON 就是配对规则。最直观的是那个不写 ON 的演示——2 张订单乘 2 条明细出来 4 行，里面两条是假的。第三是我把任务单里「删掉 Order.java」理解成了「这个类不要了」，把文件整个删了，结果 OrderRepository 里 List<Order> 编译不过。实际是「用新内容替换掉旧内容」，文件名要留着。
+
+还没搞懂的：一是 LEFT JOIN 拿到 NULL 之后该怎么办。我用 INNER JOIN，所以「有订单没明细」的订单会直接消失、用户看不见；换 LEFT JOIN 能看到，但 rs.getBigDecimal("unit_price") 返回 null，再调 .doubleValue() 会抛 NullPointerException。两种都有代价，还没想清该选哪个。二是 order.total 和明细之间的关系——它是存下来的快照，不是每次现算，那谁保证它跟明细一致？现在的答案是「走 placeOrder 就一致」，但这话听着不牢靠，如果有人直接改表就出账了。三是 created_at 现在用 String 接，打印出来带个 .0，时间到底该用什么类型。
+
+ai帮了多少：Order、OrderItem、OrderRepository 的骨架都是任务单给的，我是对照敲的。JOIN 和折叠这两块是靠 ai 现场跑 SQL 演示才通的——尤其是「临时补两条明细让你看三行」那次，看到同一个订单号重复三遍，再看到折叠回一张订单，这两面对起来才真的懂了。另外今天 ai 有两处写错被我发现了：一处是任务单说「直接删掉 Order.java」（其实是替换内容），一处是说 LEFT JOIN 会造出假明细（实际是抛 NPE）。
+
 
 

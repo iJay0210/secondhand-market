@@ -1,9 +1,11 @@
 import java.math.BigDecimal;
 import java.sql.*;
+import java.util.List;
 
 public class OrderService {
     private final ProductRepository products = new ProductRepository();
     private final UserRepository users = new UserRepository();
+    private final OrderRepository orders = new OrderRepository();
 
     public int placeOrder(int userId, int productId, int qty) {
         try (Connection conn = DbUtil.getConnection()) {
@@ -18,8 +20,8 @@ public class OrderService {
 
                 double total = p.getPrice() * qty;
 
-                int orderId = insertOrder(conn, userId, total);
-                insertItem(conn, orderId, productId, qty, p.getPrice());
+                int orderId = orders.insertOrder(conn, userId, total);        // ← 改成订单仓
+                orders.insertItem(conn, orderId, productId, qty, p.getPrice());
 
                 if (!products.deductStock(conn, productId, qty)) {
                     throw new IllegalStateException(
@@ -40,30 +42,8 @@ public class OrderService {
         }
     }
 
-    private int insertOrder(Connection conn, int userId, double total) throws SQLException {
-        String sql = "INSERT INTO `order` (user_id, total) VALUES (?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setInt(1, userId);
-            ps.setBigDecimal(2, BigDecimal.valueOf(total));
-            ps.executeUpdate();
-            try (ResultSet rs = ps.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
-            }
-        }
-        throw new IllegalStateException("插入订单后没拿到 id");
+    public List<Order> findMyOrders(int userId){
+        return orders.findByUserId(userId);
     }
 
-    private void insertItem(Connection conn, int orderId, int productId, int qty, double unitPrice)
-            throws SQLException {
-        String sql = "INSERT INTO order_item (order_id, product_id, qty, unit_price) VALUES (?, ?, ?, ?)";
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, orderId);
-            ps.setInt(2, productId);
-            ps.setInt(3, qty);
-            ps.setBigDecimal(4, BigDecimal.valueOf(unitPrice));
-            ps.executeUpdate();
-        }
-    }
 }

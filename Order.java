@@ -1,28 +1,47 @@
 import java.util.ArrayList;
+import java.util.List;
 
 public class Order {
+    private final int id;
+    private final int userId;
+    private final double total;
+    private final String createdAt;
+    private final List<OrderItem> items = new ArrayList<>();
+
+    public Order(int id, int userId, double total, String createdAt) {
+        this.id = id;
+        this.userId = userId;
+        this.total = total;
+        this.createdAt = createdAt;
+    }
+
+    public int getId() {return id;}
+    public int getUserId() {return userId;}
+    public double getTotal() {return total;}
+    public String getCreatedAt() {return createdAt;}
+
+    public List<OrderItem> getItems() {return List.copyOf(items);}
+
+    public void addItem(OrderItem item) {items.add(item);}
+
+    public int getTotalQty(){
+        int sum = 0;
+        for (OrderItem item : items) {
+            sum += item.getQty();
+        }
+        return sum;
+    }
 
     @Override
     public String toString() {
-        return "订单 #" + id + "，金额 " + amount + "，状态 " + status;
+        StringBuilder sb = new StringBuilder();
+        sb.append("订单 #").append(id).
+                append("   ").append(createdAt)
+                .append(" 合计 ").append(total);
+        for (OrderItem item : items) {
+            sb.append("\n").append(item);
+        }
+        return sb.toString();
     }
 
-    int id;
-    int amount;
-    String status;
-
-    public Order(int id, int amount, String status) {
-        this.id = id;
-        this.amount = amount;
-        this.status = status;
-    }
-
-    public static void main(String[] args) {
-        Order a = new Order(1,1,"A");
-        Order b = new Order(2,2,"B");
-        b.status = "已结算";
-
-        System.out.println(a);
-        System.out.println(b);
-    }
 }

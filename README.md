@@ -19,7 +19,8 @@
 - [x] Day 13: W3 复盘与收口
 - [x] Day 14: User 入库与表结构迁移
 - [x] Day 15: 查我的订单（多表 JOIN 与对象折叠）
-- [ ] Day 16: 第一次自动测试
+- [x] Day 16: 第一次自动测试（JUnit 5）
+- [ ] Day 17: buy 的事务保护与异常统一
 
 ## 环境准备
 
@@ -80,6 +81,10 @@ MySQL 驱动不打进仓库。把 `mysql-connector-j-8.0.33.jar` 放进 `lib/` �
 
 驱动版本要跟 MySQL 的大版本对上：MySQL 8.0 配 `mysql-connector-j-8.x`，别用 9.x。
 
+跑测试还需要 JUnit 5。放 `junit-platform-console-standalone-1.10.2.jar` 到 `lib/`，同样 `Add as Library...`。这个 jar 是全家桶（断言、运行器、报告都在里面），不需要再配别的依赖。
+
+两个 jar 都在 `.gitignore` 里，clone 下来要自己放。
+
 ## 配置
 
 数据库账号密码不写在代码里。把 `db.properties.example` 复制一份改名为 `db.properties`，填上自己的密码：
@@ -105,6 +110,19 @@ java App
 `OrderTest` 是订单流程的入口：下单、库存不足、余额不足、查我的订单。
 
 `DbTest` 是 JDBC 的连接与读写验证，单独跑它可以看到连接、插入、查询三步的输出。
+
+## 测试
+
+```bash
+javac -encoding UTF-8 -cp "lib\mysql-connector-j-8.0.33.jar;lib\junit-platform-console-standalone-1.10.2.jar" -d out *.java
+java -jar lib\junit-platform-console-standalone-1.10.2.jar --class-path "out;lib\mysql-connector-j-8.0.33.jar" --select-class OrderServiceTest
+```
+
+或者在 IDEA 里点类名旁边的绿三角，跟跑 `main` 一样。
+
+`OrderServiceTest` 有六条测试，覆盖正常下单、库存不足、余额不足、用户不存在、查两单、查空。
+
+注意：`@BeforeEach` 会清空 `order_item`、`order`、`user` 三张表（`product` 只重置 `stock`）。**跑测试会清掉开发库里的交易数据。** 真实项目用独立测试库隔离，这个项目目前还没做，跑之前先想清楚。
 
 ## 代码结构
 
@@ -135,6 +153,17 @@ OrderItem           订单明细。productName 是 JOIN 出来的，不来自表
 ```
 
 查询订单时的关键一步：一次 JOIN 返回的是扁平行，同一个订单号会重复多次，所以在 `OrderRepository.findByUserId` 里用 `LinkedHashMap` 按订单号折叠成一个订单对象。用 `LinkedHashMap` 而不是 `HashMap`，是为了保住 SQL 里 `ORDER BY` 排好的顺序。
+
+测试与入口：
+
+```
+OrderServiceTest    JUnit 5。六条测试，@BeforeEach 每条开始前清表并重置库存
+HelloTest           JUnit 5。一个 1+1 的断言，只用来确认环境通了
+OrderTest           手工入口。下单、库存不足、余额不足、查订单
+App                 手工入口。商品的上架、购买、改价、删除
+```
+
+`OrderServiceTest` 里的测试都遵循一条规则：**只断言自己造的那份数据**，不断言「表里一共几行」。所以就算库里有别的用户和订单，结果也不受影响。
 
 
 

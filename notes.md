@@ -184,3 +184,15 @@ ai帮了多少：Order、OrderItem、OrderRepository 的骨架都是任务单给
 
 
 
+
+## Day 16
+
+今天做了什么：项目里加了 JUnit 5，lib 下放了一个 junit-platform-console-standalone 的 jar（2.6M，断言、运行器、报告全在里面，不用再配别的）。先写 HelloTest 验证环境通不通，就一个 1+1 的断言，改坏一次看它变红，再改回来。然后新建 OrderServiceTest，写了六个测试：正常下单、库存不足、余额不足、用户不存在、查两单、查空。用 @BeforeEach 在每条测试跑之前清空 order_item、order、user 三张表，并把手机库存重置成 5。最后做了那个「故意改坏」的实验——把 deductStock 的方法体改成直接 return true，看测试会不会报警。
+
+卡在哪里：两处。第一处是我把任务单里那段 setUp 直接粘到了 HelloTest 里，还留着原来那个 1+1 测试的 @Test 注解，结果 setUp 上同时有 @Test 和 @BeforeEach。而且 service、users、products 三个变量根本没声明，整个文件一片红。后来才想明白这三样是类的字段，要先写 private OrderService service; 这种声明，然后在 setUp 里赋值。还有一点是我一直没意识到——这段 setUp 压根不该放在 HelloTest 里，HelloTest 是用来验环境的，不碰数据库，它应该属于 OrderServiceTest。
+
+第二处是改坏 deductStock 之后，红了两条测试，不是我预期的一条。第一条是 placeOrder_ok 报「库存 5 减 2 应剩 3，实际是 5」，这条能想到。第二条是库存不足那条，报的是「期望 IllegalStateException 实际 IllegalArgumentException」，Caused by 是「余额不能为负 -2986001」。我想了一会儿才明白：库存检查被我废掉了，所以买 999 件那单一路上写下去，最后扣余额时 10000 减 999×2999 变成负数，抛出来的是余额的错。一个地方坏掉，报出来的错跑到别的地方去了。
+
+还没搞懂的：一是测试会把开发库的数据全清掉，这次是我的数据被备份又灌回去的，真实项目到底怎么做到测试不碰开发库。二是测试方法为什么必须没有参数——反射调用时不知道该传什么这个我懂了，但听说 JUnit 5 其实支持给测试方法传参数（参数化测试），那个是怎么绕过去的。
+
+ai帮了多少：JUnit 的 jar 是 ai 下的，本机只有 JUnit 4。测试骨架是任务单给的。六条测试和改坏那次都是 ai 实跑的——我这台机器 MySQL 要自己手动启动，ai 起不来服务，所以是等我启动之后它跑了一遍，跑之前备份数据、跑完又灌回去。今天被 ai 纠正了一处：检验第三问我以为删掉三行 DELETE 之后测试会互相影响，实际不会，因为每条测试都只查它自己新建的那个用户，订单表里有别人的数据也不影响。

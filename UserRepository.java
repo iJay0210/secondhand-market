@@ -36,7 +36,7 @@ public class UserRepository {
                 }
             }
         }
-        throw new IllegalArgumentException("用户不存在：id=" + id);
+        throw new BusinessException("用户不存在：id=" + id);
     }
 
     private User insert(Connection conn,User u) throws SQLException{
@@ -60,7 +60,7 @@ public class UserRepository {
             ps.setBigDecimal(2, BigDecimal.valueOf(u.getBalance()));
             ps.setInt(3,u.getId());
             if (ps.executeUpdate()==0){
-                throw new IllegalArgumentException("用户不存在：id="+u.getId());
+                throw new BusinessException("用户不存在：id="+u.getId());
             }
         }
     }

@@ -20,7 +20,8 @@
 - [x] Day 14: User 入库与表结构迁移
 - [x] Day 15: 查我的订单（多表 JOIN 与对象折叠）
 - [x] Day 16: 第一次自动测试（JUnit 5）
-- [ ] Day 17: buy 的事务保护与异常统一
+- [x] Day 17: 退役 buy 与统一业务异常
+- [ ] Day 18: W4 复盘
 
 ## 环境准备
 
@@ -138,10 +139,13 @@ OrderRepository     order + order_item 表。插入订单、插入明细、按�
 业务层（管流程和规则，一句 SQL 都不写）：
 
 ```
-ProductService      商品的上架、改价、购买
+ProductService      商品的上架、改价、删除。买货不在这里，见下面
 OrderService        下单（四步写入同一事务），查我的订单
 BuyChecker          能不能买的三条判断
+BusinessException   业务规则不允许时抛的异常。getMessage() 可以直接给用户看
 ```
+
+下单只有一个入口：`OrderService.placeOrder`。W2 时期的 `ProductService.buy` 已在 Day 17 删除——它只扣库存不改余额、不写订单，而且失败时返回 boolean 不报错，会留下「货出去了钱没收」的错账。
 
 模型（数据长什么样）：
 
@@ -157,13 +161,21 @@ OrderItem           订单明细。productName 是 JOIN 出来的，不来自表
 测试与入口：
 
 ```
-OrderServiceTest    JUnit 5。六条测试，@BeforeEach 每条开始前清表并重置库存
+OrderServiceTest    JUnit 5。七条测试，@BeforeEach 每条开始前清表并重置库存
 HelloTest           JUnit 5。一个 1+1 的断言，只用来确认环境通了
 OrderTest           手工入口。下单、库存不足、余额不足、查订单
-App                 手工入口。商品的上架、购买、改价、删除
+App                 手工入口。商品的上架、下单、改价、删除、查我的订单
 ```
 
 `OrderServiceTest` 里的测试都遵循一条规则：**只断言自己造的那份数据**，不断言「表里一共几行」。所以就算库里有别的用户和订单，结果也不受影响。
+
+### 异常约定
+
+异常分两类，判据是「这句话能不能直接给用户看」：
+
+`BusinessException` 是业务规则不允许——库存不足、商品已下架、余额不够、记录不存在。这类失败每天都会发生，是正常业务路径，调用方 catch 住把 message 显示给用户，程序继续跑。
+
+`IllegalArgumentException` / `IllegalStateException` 是编程错误——单价传了负数、库存传了负值、用户名为空。这类失败意味着某处代码写错了，不该被 catch，应该让它崩，崩了才有人去修。
 
 
 

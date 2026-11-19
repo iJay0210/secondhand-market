@@ -23,7 +23,7 @@ public class ProductService {
     public void delete(int id){
         Product p = repo.findById(id);
         if (p.getStock() > 0) {
-            throw new IllegalStateException(
+            throw new BusinessException(
                     "库存还有" + p.getStock() + "件，不能删：" + p.getName());
         }
             repo.deleteById(id);
@@ -38,15 +38,5 @@ public class ProductService {
         return repo.findAll();
     }
 
-    public boolean buy(int id,User u,int qty){
-        Product p = repo.findById(id);
-        if(!new BuyChecker().canBuy(p,u,qty)){
-            return false;
-        }
-        p.setStock(p.getStock() - qty);
-        repo.save(p);
-        u.addPurchase(qty);
-        u.setBalance(u.getBalance() - p.getPrice()*qty);
-        return true;
-    }
+
 }

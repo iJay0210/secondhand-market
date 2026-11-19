@@ -15,20 +15,26 @@ public class OrderService {
                 Product p = products.findById(conn, productId);
 
                 if (!"ON_SALE".equals(p.getStatus())) {
-                    throw new IllegalStateException("商品未上架：" + p.getName());
+                    throw new BusinessException("商品未上架：" + p.getName());
                 }
 
                 double total = p.getPrice() * qty;
+
+                if (u.getBalance() < total) {
+                    throw new BusinessException(
+                            "余额不足：需要 " + total + "，只有 " + u.getBalance());
+                }
 
                 int orderId = orders.insertOrder(conn, userId, total);        // ← 改成订单仓
                 orders.insertItem(conn, orderId, productId, qty, p.getPrice());
 
                 if (!products.deductStock(conn, productId, qty)) {
-                    throw new IllegalStateException(
+                    throw new BusinessException(
                             "库存不足：" + p.getName() + "，只剩 " + p.getStock() + " 件");
                 }
 
-                u.setBalance(u.getBalance() - total);   // 余额不够会在这里抛异常
+
+                u.setBalance(u.getBalance() - total);
                 users.save(conn, u);
 
                 conn.commit();

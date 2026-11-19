@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 
@@ -44,15 +45,26 @@ public class OrderServiceTest {
     }
 
     @Test
+    @DisplayName("商品未上架，抛BusinessException")
+    void placeOrder_notOnSale() throws Exception {
+        User u = users.save(new User("测试用户", 10000.00));
+        try (Connection conn = DbUtil.getConnection();Statement st = conn.createStatement()) {
+            st.executeUpdate("UPDATE product SET status = 'OFF_SALE' WHERE id = 1");
+        }
+        assertThrows(BusinessException.class, () -> service.placeOrder(u.getId(), 1, 1));
+        assertEquals(5,products.findById(1).getStock(),"没下单成功，库存不该变");
+    }
+
+    @Test
     @DisplayName("库存不足：抛异常，库存和余额都不变")
     void placeOrder_notEnoughStock() {
-        User u = users.save(new User("测试用户", 10000.00));
+        User u = users.save(new User("测试用户", 10000000.00));
 
-        assertThrows(IllegalStateException.class,
+            assertThrows(BusinessException.class,
                 () -> service.placeOrder(u.getId(), 1, 999));
 
         assertEquals(5, products.findById(1).getStock(), "回滚了，库存应该还是 5");
-        assertEquals(10000.00, users.findById(u.getId()).getBalance(), 0.001, "回滚了，余额应该不变");
+        assertEquals(10000000.00, users.findById(u.getId()).getBalance(), 0.001, "回滚了，余额应该不变");
     }
 
     @Test
@@ -60,7 +72,7 @@ public class OrderServiceTest {
     void placeOrder_notEnoughBalance() {
         User u = users.save(new User("穷用户", 100.00));
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(BusinessException.class,
                 () -> service.placeOrder(u.getId(), 1, 1));
 
         assertEquals(5, products.findById(1).getStock(), "回滚了，库存应该还是 5");
@@ -70,7 +82,7 @@ public class OrderServiceTest {
     @Test
     @DisplayName("用户不存在：抛异常")
     void placeOrder_userNotFound() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(BusinessException.class,
                 () -> service.placeOrder(99999, 1, 1));
     }
 

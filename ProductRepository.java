@@ -67,7 +67,7 @@ public class ProductRepository {
                 }
             }
         }
-        throw new IllegalArgumentException("商品不存在：id=" + id);
+        throw new BusinessException("商品不存在：id=" + id);
     }
 
     public List<Product> findAll(Connection conn) throws SQLException {
@@ -87,7 +87,7 @@ public class ProductRepository {
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
             if (ps.executeUpdate() == 0) {
-                throw new IllegalArgumentException("要删的商品不存在：id=" + id);
+                throw new BusinessException("要删的商品不存在：id=" + id);
             }
         }
     }
@@ -138,7 +138,7 @@ public class ProductRepository {
             ps.setString(4, p.getStatus());
             ps.setInt(5, p.getId());
             if (ps.executeUpdate() == 0) {
-                throw new IllegalArgumentException("商品不存在：id=" + p.getId());
+                throw new BusinessException("商品不存在：id=" + p.getId());
             }
         }
     }
